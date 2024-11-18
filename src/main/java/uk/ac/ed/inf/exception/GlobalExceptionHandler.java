@@ -9,7 +9,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleAllExceptions(Exception ex) {
-        // Log the exception if necessary
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request data");
     }
 }

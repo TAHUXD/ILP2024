@@ -67,8 +67,7 @@ public class RestServiceController {
     }
 
     private LngLat calculateNextPosition(LngLat start, double angle) {
-        // Implement the calculation
-        double distance = 0.00015; // Assuming a fixed movement distance
+        double distance = 0.00015;
         double rad = Math.toRadians(angle);
         double newLng = start.getLng() + distance * Math.cos(rad);
         double newLat = start.getLat() + distance * Math.sin(rad);
@@ -80,20 +79,19 @@ public class RestServiceController {
     }
 
     private boolean isPointInPolygon(LngLat point, List<LngLat> vertices) {
-        // Implement the ray casting algorithm
         int intersectCount = 0;
         for (int i = 0; i < vertices.size(); i++) {
             LngLat v1 = vertices.get(i);
             LngLat v2 = vertices.get((i + 1) % vertices.size());
 
-            if (rayIntersectsSegment(point, v1, v2)) {
+            if (intersectsSegment(point, v1, v2)) {
                 intersectCount++;
             }
         }
         return (intersectCount % 2) == 1;
     }
 
-    private boolean rayIntersectsSegment(LngLat p, LngLat a, LngLat b) {
+    private boolean intersectsSegment(LngLat p, LngLat a, LngLat b) {
         if (a.getLat() > b.getLat()) {
             LngLat temp = a;
             a = b;

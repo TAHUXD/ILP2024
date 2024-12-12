@@ -4,20 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6d43ba98-d253-47a1-bbdd-272522968032" name="Changes" comment="Added Dockerfile with tar gile">
-      <change afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/models/CreditCardInformation.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/models/Order.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/models/OrderStatus.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/models/OrderValidationCode.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/models/OrderValidationResult.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/models/Pizza.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/models/Restaurant.java" afterDir="false" />
+    <list default="true" id="6d43ba98-d253-47a1-bbdd-272522968032" name="Changes" comment="Added new endpoint and relevant files, changed previous endpoint to avoid duplication">
+      <change afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/controllers/Node.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/uk/ac/ed/inf/OrderValidationTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/uk/ac/ed/inf/PathCalculationTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/ilp_submission_image.tar" beforeDir="false" afterPath="$PROJECT_DIR$/ilp_submission_image.tar" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/controllers/RestServiceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/controllers/RestServiceController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ac/ed/inf/exception/GlobalExceptionHandler.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,6 +60,8 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;JUnit.OrderValidationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.OrderValidationTest.testValidateOrderValid.executor&quot;: &quot;Run&quot;,
     &quot;Maven. [org.apache.maven.plugins:maven-archetype-plugin:RELEASE:generate].executor&quot;: &quot;Run&quot;,
     &quot;Maven.PizzaDronz [install].executor&quot;: &quot;Run&quot;,
     &quot;Maven.PizzaDronz [package].executor&quot;: &quot;Run&quot;,
@@ -86,11 +82,42 @@
     &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.repository.indices&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Spring Boot.App">
+    <configuration name="OrderValidationTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="PizzaDronz" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="uk.ac.ed.inf.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="uk.ac.ed.inf" />
+      <option name="MAIN_CLASS_NAME" value="uk.ac.ed.inf.OrderValidationTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="OrderValidationTest.testValidateOrderValid" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="PizzaDronz" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="uk.ac.ed.inf.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="uk.ac.ed.inf" />
+      <option name="MAIN_CLASS_NAME" value="uk.ac.ed.inf.OrderValidationTest" />
+      <option name="METHOD_NAME" value="testValidateOrderValid" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="App" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <module name="PizzaDronz" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="uk.ac.ed.inf.App" />
@@ -107,6 +134,8 @@
     <recent_temporary>
       <list>
         <item itemvalue="Spring Boot.App" />
+        <item itemvalue="JUnit.OrderValidationTest" />
+        <item itemvalue="JUnit.OrderValidationTest.testValidateOrderValid" />
       </list>
     </recent_temporary>
   </component>
@@ -133,7 +162,15 @@
       <workItem from="1728412411626" duration="2233000" />
       <workItem from="1728939359491" duration="9417000" />
       <workItem from="1729013974400" duration="2103000" />
-      <workItem from="1731942383677" duration="2177000" />
+      <workItem from="1731942383677" duration="3991000" />
+      <workItem from="1732295937351" duration="2754000" />
+      <workItem from="1732827389090" duration="2164000" />
+      <workItem from="1733156146118" duration="8265000" />
+      <workItem from="1733337792082" duration="2932000" />
+      <workItem from="1733505972395" duration="6547000" />
+      <workItem from="1733775992601" duration="7699000" />
+      <workItem from="1733859679576" duration="2261000" />
+      <workItem from="1733970886468" duration="501000" />
     </task>
     <task id="LOCAL-00001" summary="1st commit test">
       <option name="closed" value="true" />
@@ -175,7 +212,23 @@
       <option name="project" value="LOCAL" />
       <updated>1727214084801</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Added more model classes: Order, Order Status, Order Validation, Pizza, CC Info, Restaurant">
+      <option name="closed" value="true" />
+      <created>1731944756541</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1731944756541</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Added new endpoint and relevant files, changed previous endpoint to avoid duplication">
+      <option name="closed" value="true" />
+      <created>1733508788159</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1733508788159</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,7 +249,9 @@
     <MESSAGE value="1st commit test" />
     <MESSAGE value="Added Controller and Exception Package with potential classes" />
     <MESSAGE value="Added Dockerfile with tar gile" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added Dockerfile with tar gile" />
+    <MESSAGE value="Added more model classes: Order, Order Status, Order Validation, Pizza, CC Info, Restaurant" />
+    <MESSAGE value="Added new endpoint and relevant files, changed previous endpoint to avoid duplication" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added new endpoint and relevant files, changed previous endpoint to avoid duplication" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

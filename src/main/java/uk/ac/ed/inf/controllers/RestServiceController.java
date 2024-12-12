@@ -9,6 +9,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import org.springframework.web.client.RestTemplate;
+import java.util.PriorityQueue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -106,6 +107,69 @@ public class RestServiceController {
 
         return ResponseEntity.ok(path);
     }
+
+    // 7. /calcDeliveryPathGeoJSON (POST)
+    @PostMapping("/calcDeliveryPathGeoJSON")
+    public ResponseEntity<Object> calcDeliveryPathGeoJSON(@RequestBody Order order) {
+        // Validate the order using the performOrderValidation method
+        OrderValidationResult validationResult = performOrderValidation(order);
+        if (validationResult.getOrderStatus() != OrderStatus.VALID) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // Get restaurant location
+        Restaurant restaurant = getRestaurantForOrder(order);
+        if (restaurant == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        LngLat restaurantLocation = restaurant.getLocation();
+
+        // Get Appleton Tower location
+        LngLat appletonTower = new LngLat(-3.186874, 55.944494);
+
+        // Fetch no-fly zones and central area
+        List<NoFlyZone> noFlyZones = getNoFlyZones();
+        Region centralArea = getCentralArea();
+
+        // Calculate path
+        List<LngLat> path = calculatePath(restaurantLocation, appletonTower, noFlyZones, centralArea);
+
+        if (path == null || path.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        if (path.size() > 1 && path.get(0).closeTo(path.get(1))) {
+            path.remove(0);
+        }
+        // Check and remove duplicates at end
+        if (path.size() > 1 && path.get(path.size() - 1).closeTo(path.get(path.size() - 2))) {
+            path.remove(path.size() - 1);
+        }
+
+        // Convert path to GeoJSON Feature
+        Map<String, Object> feature = new HashMap<>();
+        feature.put("type", "Feature");
+
+        Map<String, Object> geometry = new HashMap<>();
+        geometry.put("type", "LineString");
+
+        // Convert LngLat to [lng, lat]
+        List<List<Double>> coordinates = new ArrayList<>();
+        for (LngLat point : path) {
+            coordinates.add(Arrays.asList(point.getLng(), point.getLat()));
+        }
+
+        geometry.put("coordinates", coordinates);
+        feature.put("geometry", geometry);
+
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("name", "Delivery Path");
+        feature.put("properties", properties);
+
+        return ResponseEntity.ok(feature);
+    }
+
+    //Helper methods
 
     // Helper method to retrieve restaurant data
     private RestTemplate restTemplate = new RestTemplate();
@@ -238,7 +302,7 @@ public class RestServiceController {
     }
 
     // Helper method to validate the order internally
-    private OrderValidationResult performOrderValidation(Order order) {
+    public OrderValidationResult performOrderValidation(Order order) {
         OrderValidationResult result = new OrderValidationResult();
         result.setOrderStatus(OrderStatus.VALID);
         result.setOrderValidationCode(OrderValidationCode.NO_ERROR);
@@ -400,81 +464,81 @@ public class RestServiceController {
 
     // Helper method to calculate the path
     private List<LngLat> calculatePath(LngLat start, LngLat end, List<NoFlyZone> noFlyZones, Region centralArea) {
-        // Implement a pathfinding algorithm that considers:
-        // - Drone movement constraints (16 compass directions)
-        // - No-fly zones
-        // - Central area constraints
+        PriorityQueue<Node> openSet = new PriorityQueue<>();
+        Set<Node> closedSet = new HashSet<>();
 
-        List<LngLat> path = new ArrayList<>();
-        LngLat currentPosition = start;
+        boolean startInCentralArea = isPointInPolygon(start, centralArea.getVertices());
+        Node startNode = new Node(start, null, 0, heuristic(start, end), startInCentralArea);
+        openSet.add(startNode);
 
-        // Hover at the restaurant to pick up the order
-        path.add(currentPosition); // Hover move
+        while (!openSet.isEmpty()) {
+            Node currentNode = openSet.poll();
 
-        boolean enteredCentralArea = false;
-
-        while (!currentPosition.closeTo(end)) {
-            // Get possible moves
-            List<Double> possibleAngles = Arrays.asList(
-                    0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5,
-                    180.0, 202.5, 225.0, 247.5, 270.0, 292.5, 315.0, 337.5
-            );
-
-            final LngLat positionForLambda = currentPosition;
-
-            // Sort angles based on how close they bring us to the end point
-            possibleAngles.sort(Comparator.comparingDouble(angle -> {
-                LngLat nextPos = positionForLambda.nextPosition(angle);
-                return nextPos.distanceTo(end);
-            }));
-
-            boolean moved = false;
-            for (Double angle : possibleAngles) {
-                LngLat potentialPosition = currentPosition.nextPosition(angle);
-                if (isValidMove(currentPosition, potentialPosition, noFlyZones, centralArea)) {
-                    path.add(potentialPosition);
-                    currentPosition = potentialPosition;
-                    moved = true;
-
-                    // Check if we have entered the central area
-                    if (!enteredCentralArea && isPointInPolygon(currentPosition, centralArea.getVertices())) {
-                        enteredCentralArea = true;
-                    }
-
-                    break;
-                }
+            if (currentNode.getPosition().closeTo(end)) {
+                return buildPath(currentNode);
             }
-            if (!moved) {
-                // No valid moves available, cannot reach the destination
-                return null;
+
+            closedSet.add(currentNode);
+
+            for (double angle = 0; angle < 360; angle += 22.5) {
+                LngLat newPosition = currentNode.getPosition().nextPosition(angle);
+                boolean neighborEnteredCentralArea = currentNode.hasEnteredCentralArea();
+
+                // Check if this move would enter central area
+                if (!neighborEnteredCentralArea && isPointInPolygon(newPosition, centralArea.getVertices())) {
+                    neighborEnteredCentralArea = true;
+                }
+
+                // Check if the move is valid given the no-fly zones and central area constraints
+                if (!isValidMove(currentNode.getPosition(), newPosition, noFlyZones, centralArea, currentNode.hasEnteredCentralArea())) {
+                    continue;
+                }
+
+                Node neighbor = new Node(newPosition, currentNode, currentNode.getGCost() + 1, heuristic(newPosition, end), neighborEnteredCentralArea);
+
+                if (closedSet.contains(neighbor)) {
+                    continue;
+                }
+
+                Optional<Node> existingNode = openSet.stream().filter(n -> n.equals(neighbor)).findFirst();
+                if (existingNode.isPresent()) {
+                    if (existingNode.get().getGCost() > neighbor.getGCost()) {
+                        openSet.remove(existingNode.get());
+                        openSet.add(neighbor);
+                    }
+                } else {
+                    openSet.add(neighbor);
+                }
             }
         }
 
-        // Hover at Appleton Tower to deliver the order
-        path.add(currentPosition); // Hover move
-
-        return path;
+        return null;
     }
 
+
     // Helper method to check if a move is valid
-    private boolean isValidMove(LngLat from, LngLat to, List<NoFlyZone> noFlyZones, Region centralArea) {
+    private boolean isValidMove(LngLat from, LngLat to, List<NoFlyZone> noFlyZones, Region centralArea, boolean enteredCentralArea) {
         // Check if the move crosses any no-fly zones
         for (NoFlyZone zone : noFlyZones) {
             if (lineIntersectsPolygon(from, to, zone.getVertices())) {
                 return false;
             }
         }
-        // Check if we are inside the central area after entering it
+
         boolean fromInCentral = isPointInPolygon(from, centralArea.getVertices());
         boolean toInCentral = isPointInPolygon(to, centralArea.getVertices());
 
-        if (fromInCentral && !toInCentral) {
-            // We are leaving the central area after entering it, which is not allowed
+        // If we have already entered central area at some point in the path:
+        // We must not leave it. If we are inside and then go outside, not allowed.
+        if (enteredCentralArea && !toInCentral) {
             return false;
         }
 
+        // Otherwise, it's allowed. If we haven't entered yet, we can still choose to enter now.
         return true;
     }
+
+
 
     // Helper method to check if a line segment intersects with any polygon
     private boolean lineIntersectsPolygon(LngLat p1, LngLat p2, List<LngLat> polygon) {
@@ -502,6 +566,35 @@ public class RestServiceController {
 
         return (s >= 0 && s <= 1 && t >= 0 && t <= 1);
     }
+
+    //Helper method for the heuristic function
+    private double heuristic(LngLat current, LngLat goal) {
+        double distance = current.distanceTo(goal);
+        return distance / 0.00015; // Each move is 0.00015 degrees
+    }
+
+    //Helper method to retrace the path from the goal node back to the start node
+    private List<LngLat> buildPath(Node goalNode) {
+        List<LngLat> path = new ArrayList<>();
+        Node currentNode = goalNode;
+
+        // Retrace the path
+        while (currentNode != null) {
+            path.add(currentNode.getPosition());
+            currentNode = currentNode.getParent();
+        }
+
+        // Reverse the path to start from the start position
+        Collections.reverse(path);
+
+        // Add hover at the start and end positions
+        path.add(0, path.get(0)); // Hover at the restaurant
+        path.add(path.get(path.size() - 1)); // Hover at Appleton Tower
+
+        return path;
+    }
+
+
 
 
 }

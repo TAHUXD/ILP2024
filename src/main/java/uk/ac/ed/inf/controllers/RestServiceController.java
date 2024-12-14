@@ -26,7 +26,7 @@ public class RestServiceController {
     // 2. /distanceTo (POST)
     @PostMapping("/distanceTo")
     public ResponseEntity<Double> distanceTo(@RequestBody Position positions) {
-        if (positions == null || positions.getPosition1() == null || positions.getPosition2() == null) {
+        if (positions == null || positions.getPosition1() == null || positions.getPosition2() == null || !isValidCoordinate(positions)) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -37,7 +37,7 @@ public class RestServiceController {
     // 3. /isCloseTo (POST)
     @PostMapping("/isCloseTo")
     public ResponseEntity<Boolean> isCloseTo(@RequestBody Position positions) {
-        if (positions == null || positions.getPosition1() == null || positions.getPosition2() == null) {
+        if (positions == null || positions.getPosition1() == null || positions.getPosition2() == null || !isValidCoordinate(positions)) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -49,7 +49,7 @@ public class RestServiceController {
     // 4. /nextPosition (POST)
     @PostMapping("/nextPosition")
     public ResponseEntity<LngLat> nextPosition(@RequestBody NextPositionRequest request) {
-        if (request == null || request.getStart() == null) {
+        if (request == null || request.getStart() == null || !(request.getAngle() >= 0) || !(request.getAngle() <= 180)) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -60,7 +60,7 @@ public class RestServiceController {
     // 5. /isInRegion (POST)
     @PostMapping("/isInRegion")
     public ResponseEntity<Boolean> isInRegion(@RequestBody IsInRegionRequest request) {
-        if (request == null || request.getPosition() == null || request.getRegion() == null) {
+        if (request == null || request.getPosition() == null || request.getRegion() == null || !isValidCoordinate2(request.getPosition())) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -108,7 +108,7 @@ public class RestServiceController {
         return ResponseEntity.ok(path);
     }
 
-    // 7. /calcDeliveryPathGeoJSON (POST)
+    // 8. /calcDeliveryPathGeoJSON (POST)
     @PostMapping("/calcDeliveryPathGeoJSON")
     public ResponseEntity<Object> calcDeliveryPathGeoJSON(@RequestBody Order order) {
         // Validate the order using the performOrderValidation method
@@ -246,6 +246,23 @@ public class RestServiceController {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    //Helper method to validate latitude and longitude
+    private boolean isValidCoordinate(Position positions) {
+        double Lng1 = positions.getPosition1().getLng();
+        double Lng2 = positions.getPosition2().getLng();
+        double Lat1 = positions.getPosition1().getLat();
+        double Lat2 = positions.getPosition2().getLat();
+
+        return Lng1 >= -180 && Lng1 <= 180 && Lat1 >= -90 && Lat1 <= 90 && Lng2 >= -180 && Lng2 <= 180 && Lat2 >= -90 && Lat2 <= 90;
+    }
+
+    //Helper method to validate latitude and longitude for isInRegion
+    private boolean isValidCoordinate2(LngLat positions) {
+        double Lng = positions.getLng();
+        double Lat = positions.getLat();
+        return Lng >= -180 && Lng <= 180 && Lat >= -90 && Lat <= 90 ;
     }
 
     // Helper Methods

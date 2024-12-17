@@ -64,6 +64,19 @@ public class RestServiceController {
             return ResponseEntity.badRequest().build();
         }
 
+        List<LngLat> vertices = request.getRegion().getVertices();
+        if (vertices == null || vertices.size() < 4) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Check if first and last vertices are the same
+        LngLat first = vertices.get(0);
+        LngLat last = vertices.get(vertices.size() - 1);
+        if (!areCoordinatesEqual(first, last)) {
+            // If the polygon is not closed, return bad request
+            return ResponseEntity.badRequest().build();
+        }
+
         boolean isInside = isPointInPolygon(request.getPosition(), request.getRegion().getVertices());
         return ResponseEntity.ok(isInside);
     }
@@ -282,6 +295,11 @@ public class RestServiceController {
         nextPos.setLng(newLng);
         nextPos.setLat(newLat);
         return nextPos;
+    }
+
+    // Helper method to compare coordinates
+    private boolean areCoordinatesEqual(LngLat a, LngLat b) {
+        return Double.compare(a.getLng(), b.getLng()) == 0 && Double.compare(a.getLat(), b.getLat()) == 0;
     }
 
     private boolean isPointInPolygon(LngLat point, List<LngLat> vertices) {

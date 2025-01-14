@@ -498,7 +498,7 @@ public class RestServiceController {
     }
 
     // Helper method to calculate the path
-    private List<LngLat> calculatePath(LngLat start, LngLat end, List<NoFlyZone> noFlyZones, Region centralArea) {
+    public List<LngLat> calculatePath(LngLat start, LngLat end, List<NoFlyZone> noFlyZones, Region centralArea) {
         PriorityQueue<Node> openSet = new PriorityQueue<>();
         Set<Node> closedSet = new HashSet<>();
 

@@ -34,7 +34,6 @@ public class Node implements Comparable<Node> {
     public boolean equals(Object obj) {
         if (obj instanceof Node) {
             Node other = (Node) obj;
-            // Using closeTo for position comparison. Alternatively, you could compare exact doubles or use a tolerance.
             return this.position.closeTo(other.position) && this.enteredCentralArea == other.enteredCentralArea;
         }
         return false;
@@ -42,7 +41,6 @@ public class Node implements Comparable<Node> {
 
     @Override
     public int hashCode() {
-        // Simple hashCode, consider including enteredCentralArea if needed:
         return position.hashCode() + (enteredCentralArea ? 1 : 0);
     }
 }

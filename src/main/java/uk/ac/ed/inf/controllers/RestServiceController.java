@@ -91,7 +91,6 @@ public class RestServiceController {
     // 7. /calcDeliveryPath (POST)
     @PostMapping("/calcDeliveryPath")
     public ResponseEntity<List<LngLat>> calcDeliveryPath(@RequestBody Order order) {
-        // Validate the order using the performOrderValidation method
         OrderValidationResult validationResult = performOrderValidation(order);
         if (validationResult.getOrderStatus() != OrderStatus.VALID) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -124,27 +123,22 @@ public class RestServiceController {
     // 8. /calcDeliveryPathGeoJSON (POST)
     @PostMapping("/calcDeliveryPathGeoJSON")
     public ResponseEntity<Object> calcDeliveryPathGeoJSON(@RequestBody Order order) {
-        // Validate the order using the performOrderValidation method
         OrderValidationResult validationResult = performOrderValidation(order);
         if (validationResult.getOrderStatus() != OrderStatus.VALID) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        // Get restaurant location
         Restaurant restaurant = getRestaurantForOrder(order);
         if (restaurant == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         LngLat restaurantLocation = restaurant.getLocation();
 
-        // Get Appleton Tower location
         LngLat appletonTower = new LngLat(-3.186874, 55.944494);
 
-        // Fetch no-fly zones and central area
         List<NoFlyZone> noFlyZones = getNoFlyZones();
         Region centralArea = getCentralArea();
 
-        // Calculate path
         List<LngLat> path = calculatePath(restaurantLocation, appletonTower, noFlyZones, centralArea);
 
         if (path == null || path.isEmpty()) {
@@ -552,7 +546,7 @@ public class RestServiceController {
 
 
     // Helper method to check if a move is valid
-    private boolean isValidMove(LngLat from, LngLat to, List<NoFlyZone> noFlyZones, Region centralArea, boolean enteredCentralArea) {
+    public boolean isValidMove(LngLat from, LngLat to, List<NoFlyZone> noFlyZones, Region centralArea, boolean enteredCentralArea) {
         // Check if the move crosses any no-fly zones
         for (NoFlyZone zone : noFlyZones) {
             if (lineIntersectsPolygon(from, to, zone.getVertices())) {
@@ -560,11 +554,9 @@ public class RestServiceController {
             }
         }
 
-        boolean fromInCentral = isPointInPolygon(from, centralArea.getVertices());
         boolean toInCentral = isPointInPolygon(to, centralArea.getVertices());
 
-        // If we have already entered central area at some point in the path:
-        // We must not leave it. If we are inside and then go outside, not allowed.
+        // If we have already entered central area at some point in the path, we must not leave it. If we are inside and then go outside,  it's not allowed.
         if (enteredCentralArea && !toInCentral) {
             return false;
         }
@@ -589,8 +581,7 @@ public class RestServiceController {
 
     // Helper method to check if two line segments intersect
     private boolean linesIntersect(LngLat p1, LngLat p2, LngLat q1, LngLat q2) {
-        // Implement the algorithm for line segment intersection
-        // Using the cross product method
+        // Implement the algorithm for line segment intersection using the cross product method
         double s1_x = p2.getLng() - p1.getLng();
         double s1_y = p2.getLat() - p1.getLat();
         double s2_x = q2.getLng() - q1.getLng();

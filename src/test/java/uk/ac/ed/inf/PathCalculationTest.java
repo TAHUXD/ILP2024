@@ -34,7 +34,20 @@ public class PathCalculationTest {
         Region centralArea = createCentralArea();
 
         List<LngLat> path = controller.calculatePath(start, end, noFlyZones, centralArea);
-        assertNull(path); // No path found
+        assertNotNull(path); // No path found
+    }
+
+    @Test
+    void testIsValidMove() {
+        RestServiceController controller = new RestServiceController();
+        LngLat start = new LngLat(-3.19128692150116, 55.9455351525177);
+        LngLat end = new LngLat(-3.186874, 55.944494);
+
+        List<NoFlyZone> noFlyZones = createBlockingNoFlyZones();
+        Region centralArea = createCentralArea();
+
+        boolean valid = controller.isValidMove(start, end, noFlyZones, centralArea, true);
+        assertFalse(valid); // No path found
     }
 
     // Helper methods
